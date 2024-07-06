@@ -1,0 +1,1 @@
+close,volume,day,time,open,high,low,RSI,MACD,Change
