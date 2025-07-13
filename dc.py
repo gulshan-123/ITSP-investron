@@ -43,15 +43,12 @@ while(nifty_symbols):
 
                 df.reset_index(inplace=True)
                 
-                # Calculate MACD using TA-Lib
-                macd, macdsignal, macdhist = ta.MACD(df['close'], fastperiod=6, slowperiod=15, signalperiod=2)
+                macd, macdsignal, macdhist = ta.MACD(df['close'], fastperiod=5, slowperiod=7, signalperiod=2)
                 
-                # Add MACD and signal to the DataFrame
                 df['MACD'] = macd
                 
                 df['Percent'] = df['close'].pct_change()
                 df['Percent'] = df['Percent'].shift(-1)
-                # Define buy, sell, hold positions based on percentage change
                 # df['Position'] = np.where(df['Percent'] > percent_10, 1, np.where(df['Percent'] < percent_10 , -1,0))
                 df['MACDandSIG'] = macd-macdsignal
                 # previous_value = None
@@ -69,7 +66,7 @@ while(nifty_symbols):
             
                 
                 
-                df['RSI'] = ta.RSI(df['close'], timeperiod=14)
+                df['RSI'] = ta.RSI(df['close'], timeperiod=10)
                 # df['RSI'] = np.where((df['RSI'] > 70) | (df['RSI'] < 30), (df['RSI']-50), 0)
                 df['RSI'] = df['RSI']-50
                 
@@ -86,17 +83,13 @@ while(nifty_symbols):
                 df['20ma'] = df['close'].rolling(window=20).mean()
                 df['stddev'] = df['close'].rolling(window=20).std()
 
-                # Calculate upper and lower Bollinger Bands
                 df['upper_band'] = df['20ma'] + 2 * df['stddev']
                 df['lower_band'] = df['20ma'] - 2 * df['stddev']
 
-                # Generate buy/sell signals
-                df['Bollinger'] = 0  # Default to hold
+                df['Bollinger'] = 0  
 
-                # Buy signal: price crosses below lower band
                 df.loc[df['close'] < df['lower_band'], 'Bollinger'] = df['lower_band']-df['close']
 
-                # Sell signal: price crosses above upper band
                 df.loc[df['close'] > df['upper_band'], 'Bollinger'] = df['upper_band']-df['close']
 
 
@@ -105,20 +98,16 @@ while(nifty_symbols):
                 low = df['close'].min()
                 fib_levels = calculate_fibonacci_levels(high, low)
 
-                # Generate Fibonacci signals
-                df['Fibonacci'] = 0  # Default to hold
+                df['Fibonacci'] = 0  
 
-                # Buy signal: price touches Fibonacci support levels
                 for level in fib_levels:
                     df.loc[df['close'] <= level, 'Fibonacci'] = 1
 
-                # Sell signal: price touches Fibonacci resistance levels
                 for level in fib_levels:
                     df.loc[df['close'] >= level, 'Fibonacci'] = -1
 
                 df = df.iloc[14:]
 
-                # Reset the index to maintain the continuity of the DataFrame's index
                 df.reset_index(drop=True, inplace=True)
 
                 result_df = df[['close','MACD','MACDandSIG','RSI','Bollinger','Fibonacci', 'Percent']]
